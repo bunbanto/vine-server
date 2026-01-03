@@ -14,11 +14,11 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/auth", authRouter);
-app.use("/api/cards", cardsRouter);
+app.use("/auth", authRouter);
+app.use("/cards", cardsRouter);
 
 app.use((req, res) => {
-  res.status(404).json({ message: "Not found" });
+  res.status(404).json({ message: "Page Not found" });
 });
 
 app.use((err, req, res, next) => {

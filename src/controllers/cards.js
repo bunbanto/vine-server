@@ -41,7 +41,8 @@ const add = async (req, res) => {
 // Видалити картку
 const remove = async (req, res) => {
   const { id } = req.params;
-  const result = await Card.findByIdAndDelete(id);
+  const { _id: owner } = req.user;
+  const result = await Card.findOneAndDelete({ _id: id, owner });
   if (!result) {
     return res.status(404).json({ message: "Not found" });
   }
@@ -51,13 +52,16 @@ const remove = async (req, res) => {
 // Редагувати картку (всі поля)
 const update = async (req, res) => {
   const { id } = req.params;
+  const { _id: owner } = req.user;
 
   const updateData = { ...req.body };
   if (req.file) {
     updateData.img = req.file.path;
   }
 
-  const result = await Card.findByIdAndUpdate(id, updateData, { new: true });
+  const result = await Card.findOneAndUpdate({ _id: id, owner }, updateData, {
+    new: true,
+  });
   if (!result) {
     return res.status(404).json({ message: "Not found" });
   }
