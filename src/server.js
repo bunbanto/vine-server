@@ -1,13 +1,13 @@
 const app = require("./index");
 const connectDB = require("./db/connection");
 
-const { PORT = 3000 } = process.env;
+const { BACKEND_DOMAIN } = process.env;
 
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server running. Use our API on port: ${PORT}`);
+    app.listen(BACKEND_DOMAIN, () => {
+      console.log(`Server running. Use our API on port: ${BACKEND_DOMAIN}`);
     });
   } catch (error) {
     console.error(error.message);
