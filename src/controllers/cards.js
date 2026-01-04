@@ -1,11 +1,11 @@
-const Card = require("../models/card");
+const Card = require('../models/card');
 
 // Отримати всі картки з пагінацією (по 5 штук)
 const getAll = async (req, res) => {
-  const { page = 1, limit = 5 } = req.query;
+  const { page = 1, limit = 6 } = req.query;
   const skip = (page - 1) * limit;
 
-  const result = await Card.find({}, "-createdAt -updatedAt")
+  const result = await Card.find({}, '-createdAt -updatedAt')
     .skip(skip)
     .limit(Number(limit));
 
@@ -24,7 +24,7 @@ const getById = async (req, res) => {
   const { id } = req.params;
   const result = await Card.findById(id);
   if (!result) {
-    return res.status(404).json({ message: "Not found" });
+    return res.status(404).json({ message: 'Not found' });
   }
   res.json(result);
 };
@@ -32,7 +32,7 @@ const getById = async (req, res) => {
 // Додати картку
 const add = async (req, res) => {
   // Якщо файл завантажено, беремо його шлях, інакше дефолт або помилка
-  const img = req.file ? req.file.path : "";
+  const img = req.file ? req.file.path : '';
 
   const result = await Card.create({ ...req.body, img, owner: req.user._id });
   res.status(201).json(result);
@@ -44,9 +44,9 @@ const remove = async (req, res) => {
   const { _id: owner } = req.user;
   const result = await Card.findOneAndDelete({ _id: id, owner });
   if (!result) {
-    return res.status(404).json({ message: "Not found" });
+    return res.status(404).json({ message: 'Not found' });
   }
-  res.json({ message: "Card deleted" });
+  res.json({ message: 'Card deleted' });
 };
 
 // Редагувати картку (всі поля)
@@ -63,7 +63,7 @@ const update = async (req, res) => {
     new: true,
   });
   if (!result) {
-    return res.status(404).json({ message: "Not found" });
+    return res.status(404).json({ message: 'Not found' });
   }
   res.json(result);
 };
@@ -76,12 +76,12 @@ const rateCard = async (req, res) => {
 
   const card = await Card.findById(id);
   if (!card) {
-    return res.status(404).json({ message: "Not found" });
+    return res.status(404).json({ message: 'Not found' });
   }
 
   // Перевіряємо, чи користувач вже голосував
   const existingRatingIndex = card.ratings.findIndex(
-    (r) => r.userId.toString() === userId.toString()
+    (r) => r.userId.toString() === userId.toString(),
   );
 
   if (existingRatingIndex !== -1) {
