@@ -1,11 +1,30 @@
 const Card = require('../models/card');
 
-// Отримати всі картки з пагінацією (по 5 штук)
+// Joi схема для валідації картки
+const cardSchema = {
+  name: { type: 'string', min: 2, required: true },
+  color: {
+    type: 'string',
+    required: true,
+    pattern: /^(red|white|rose|sparkling|dessert)$/,
+  },
+  type: {
+    type: 'string',
+    required: true,
+    pattern: /^(still|sparkling|fortified|dessert)$/,
+  },
+  alcohol: { type: 'number', min: 0, max: 100, required: true },
+  winery: { type: 'string', min: 2, required: true },
+  price: { type: 'number', min: 0, required: true },
+};
+
+// Отримати всі картки з пагінацією (по 6 штук)
 const getAll = async (req, res) => {
   const { page = 1, limit = 6 } = req.query;
   const skip = (page - 1) * limit;
 
   const result = await Card.find({}, '-createdAt -updatedAt')
+    .populate('owner', 'name email')
     .skip(skip)
     .limit(Number(limit));
 
@@ -22,7 +41,7 @@ const getAll = async (req, res) => {
 // Отримати одну картку
 const getById = async (req, res) => {
   const { id } = req.params;
-  const result = await Card.findById(id);
+  const result = await Card.findById(id).populate('owner', 'name email');
   if (!result) {
     return res.status(404).json({ message: 'Not found' });
   }
@@ -31,8 +50,9 @@ const getById = async (req, res) => {
 
 // Додати картку
 const add = async (req, res) => {
-  // Якщо файл завантажено, беремо його шлях, інакше дефолт або помилка
-  const img = req.file ? req.file.path : '';
+  const img = req.file
+    ? req.file.path
+    : 'https://res.cloudinary.com/demo/image/upload/wines/default.jpg';
 
   const result = await Card.create({ ...req.body, img, owner: req.user._id });
   res.status(201).json(result);
@@ -71,8 +91,16 @@ const update = async (req, res) => {
 // Проставити рейтинг
 const rateCard = async (req, res) => {
   const { id } = req.params;
-  const { rating } = req.body; // Очікуємо число від 1 до 10
+  const { rating } = req.body;
   const userId = req.user._id;
+
+  // Валідація рейтингу
+  const ratingValue = Number(rating);
+  if (isNaN(ratingValue) || ratingValue < 1 || ratingValue > 10) {
+    return res
+      .status(400)
+      .json({ message: 'Rating must be a number between 1 and 10' });
+  }
 
   const card = await Card.findById(id);
   if (!card) {
@@ -86,10 +114,10 @@ const rateCard = async (req, res) => {
 
   if (existingRatingIndex !== -1) {
     // Оновлюємо існуючий рейтинг
-    card.ratings[existingRatingIndex].value = Number(rating);
+    card.ratings[existingRatingIndex].value = ratingValue;
   } else {
     // Додаємо новий
-    card.ratings.push({ userId, value: Number(rating) });
+    card.ratings.push({ userId, value: ratingValue });
   }
 
   // Перерахунок середнього рейтингу
@@ -107,4 +135,5 @@ module.exports = {
   remove,
   update,
   rateCard,
+  cardSchema,
 };
