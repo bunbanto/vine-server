@@ -1,5 +1,6 @@
-const express = require("express");
-const ctrl = require("../../controllers/auth");
+const express = require('express');
+const ctrl = require('../../controllers/auth');
+const authenticate = require('../../middlewares/auth');
 const router = express.Router();
 
 // Обгортка для відлову помилок (try/catch)
@@ -13,7 +14,8 @@ const ctrlWrapper = (ctrl) => {
   };
 };
 
-router.post("/register", ctrlWrapper(ctrl.register));
-router.post("/login", ctrlWrapper(ctrl.login));
+router.post('/register', ctrlWrapper(ctrl.register));
+router.post('/login', ctrlWrapper(ctrl.login));
+router.get('/profile', authenticate, ctrlWrapper(ctrl.getProfile));
 
 module.exports = router;

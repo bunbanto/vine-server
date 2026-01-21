@@ -50,4 +50,11 @@ const login = async (req, res) => {
   });
 };
 
-module.exports = { register, login };
+const getProfile = async (req, res) => {
+  const { _id, name, email } = req.user;
+  res.json({
+    user: { _id, name, email },
+  });
+};
+
+module.exports = { register, login, getProfile };
