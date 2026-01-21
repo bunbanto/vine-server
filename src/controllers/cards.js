@@ -89,7 +89,7 @@ const update = async (req, res) => {
 // Проставити рейтинг
 const rateCard = async (req, res) => {
   const { id } = req.params;
-  const { rating } = req.body;
+  const { rating, username } = req.body;
   const userId = req.user._id;
 
   // Валідація рейтингу
@@ -113,9 +113,13 @@ const rateCard = async (req, res) => {
   if (existingRatingIndex !== -1) {
     // Оновлюємо існуючий рейтинг
     card.ratings[existingRatingIndex].value = ratingValue;
+    // Оновлюємо username, якщо змінився
+    if (username) {
+      card.ratings[existingRatingIndex].username = username;
+    }
   } else {
     // Додаємо новий
-    card.ratings.push({ userId, value: ratingValue });
+    card.ratings.push({ userId, value: ratingValue, username });
   }
 
   // Перерахунок середнього рейтингу
@@ -123,7 +127,13 @@ const rateCard = async (req, res) => {
   card.rating = parseFloat((totalRating / card.ratings.length).toFixed(1));
 
   await card.save();
-  res.json(card);
+
+  // Повертаємо картку з populated даними
+  const result = await Card.findById(id)
+    .populate('owner', 'name email')
+    .populate('ratings.userId', 'name');
+
+  res.json(result);
 };
 
 module.exports = {

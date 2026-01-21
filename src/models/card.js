@@ -69,6 +69,7 @@ const cardSchema = new Schema(
     ratings: [
       {
         userId: { type: Schema.Types.ObjectId, ref: 'user' },
+        username: { type: String },
         value: {
           type: Number,
           min: [1, 'Rating must be at least 1'],
