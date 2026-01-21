@@ -1,7 +1,7 @@
 const { Schema, model } = require('mongoose');
 
-const colorEnum = ['red', 'white', 'rose', 'sparkling', 'dessert'];
-const typeEnum = ['still', 'sparkling', 'fortified', 'dessert'];
+const wineTypes = ['secco', 'abboccato', 'amabile', 'dolce'];
+const wineColors = ['bianco', 'rosso', 'rosato', 'sparkling'];
 
 const cardSchema = new Schema(
   {
@@ -14,16 +14,16 @@ const cardSchema = new Schema(
       type: String,
       required: [true, 'Color is required'],
       enum: {
-        values: colorEnum,
-        message: 'Color must be one of: red, white, rose, sparkling, dessert',
+        values: wineColors,
+        message: 'Color must be one of: bianco, rosso, rosato, sparkling',
       },
     },
     type: {
       type: String,
       required: [true, 'Type is required'],
       enum: {
-        values: typeEnum,
-        message: 'Type must be one of: still, sparkling, fortified, dessert',
+        values: wineTypes,
+        message: 'Type must be one of: secco, abboccato, amabile, dolce',
       },
     },
     alcohol: {
@@ -37,6 +37,22 @@ const cardSchema = new Schema(
       required: [true, 'Winery is required'],
       minlength: [2, 'Winery name must be at least 2 characters'],
     },
+    region: {
+      type: String,
+      required: [true, 'Region is required'],
+      minlength: [2, 'Region name must be at least 2 characters'],
+    },
+    country: {
+      type: String,
+      required: [true, 'Country is required'],
+      minlength: [2, 'Country name must be at least 2 characters'],
+    },
+    anno: {
+      type: Number,
+      required: [true, 'Vintage year is required'],
+      min: [1900, 'Vintage year must be at least 1900'],
+      max: [2030, 'Vintage year cannot exceed 2030'],
+    },
     img: {
       type: String,
       default: 'https://res.cloudinary.com/demo/image/upload/wines/default.jpg',
@@ -45,6 +61,10 @@ const cardSchema = new Schema(
       type: Number,
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative'],
+    },
+    frizzante: {
+      type: Boolean,
+      default: false,
     },
     ratings: [
       {

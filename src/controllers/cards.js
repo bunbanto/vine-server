@@ -6,42 +6,40 @@ const cardSchema = {
   color: {
     type: 'string',
     required: true,
-    pattern: /^(red|white|rose|sparkling|dessert)$/,
+    pattern: /^(bianco|rosso|rosato|sparkling)$/,
   },
   type: {
     type: 'string',
     required: true,
-    pattern: /^(still|sparkling|fortified|dessert)$/,
+    pattern: /^(secco|abboccato|amabile|dolce)$/,
   },
   alcohol: { type: 'number', min: 0, max: 100, required: true },
   winery: { type: 'string', min: 2, required: true },
+  region: { type: 'string', min: 2, required: true },
+  country: { type: 'string', min: 2, required: true },
+  anno: { type: 'number', min: 1900, max: 2030, required: true },
   price: { type: 'number', min: 0, required: true },
+  frizzante: { type: 'boolean' },
 };
 
-// Отримати всі картки з пагінацією (по 6 штук)
+// Отримати всі картки
 const getAll = async (req, res) => {
-  const { page = 1, limit = 6 } = req.query;
-  const skip = (page - 1) * limit;
-
   const result = await Card.find({}, '-createdAt -updatedAt')
     .populate('owner', 'name email')
-    .skip(skip)
-    .limit(Number(limit));
-
-  const total = await Card.countDocuments();
+    .populate('ratings.userId', 'name'); // Додано populate для імені користувача в рейтингах
 
   res.json({
     result,
-    total,
-    page: Number(page),
-    limit: Number(limit),
+    total: result.length,
   });
 };
 
 // Отримати одну картку
 const getById = async (req, res) => {
   const { id } = req.params;
-  const result = await Card.findById(id).populate('owner', 'name email');
+  const result = await Card.findById(id)
+    .populate('owner', 'name email')
+    .populate('ratings.userId', 'name'); // Додано populate для імені користувача в рейтингах
   if (!result) {
     return res.status(404).json({ message: 'Not found' });
   }
