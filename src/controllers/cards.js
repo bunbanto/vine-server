@@ -20,6 +20,7 @@ const cardSchema = {
   anno: { type: 'number', min: 1900, max: 2030, required: true },
   price: { type: 'number', min: 0, required: true },
   frizzante: { type: 'boolean' },
+  description: { type: 'string', max: 2000 },
 };
 
 // Отримати всі картки з пагінацією, фільтрацією та сортуванням

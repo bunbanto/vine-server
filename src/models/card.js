@@ -66,6 +66,11 @@ const cardSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    description: {
+      type: String,
+      default: '',
+      maxlength: [2000, 'Description cannot exceed 2000 characters'],
+    },
     ratings: [
       {
         userId: { type: Schema.Types.ObjectId, ref: 'user' },
