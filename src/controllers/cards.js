@@ -22,15 +22,102 @@ const cardSchema = {
   frizzante: { type: 'boolean' },
 };
 
-// Отримати всі картки
+// Отримати всі картки з пагінацією, фільтрацією та сортуванням
 const getAll = async (req, res) => {
-  const result = await Card.find({}, '-createdAt -updatedAt')
-    .populate('owner', 'name email')
-    .populate('ratings.userId', 'name'); // Додано populate для імені користувача в рейтингах
+  const {
+    page = 1,
+    limit = 10,
+    color,
+    type,
+    country,
+    minPrice,
+    maxPrice,
+    minRating,
+    winery,
+    region,
+    frizzante,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+    search,
+  } = req.query;
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  // Будуємо об'єкт фільтрації
+  const filter = {};
+
+  if (color) {
+    filter.color = color;
+  }
+
+  if (type) {
+    filter.type = type;
+  }
+
+  if (country) {
+    filter.country = country;
+  }
+
+  if (winery) {
+    filter.winery = { $regex: winery, $options: 'i' };
+  }
+
+  if (region) {
+    filter.region = { $regex: region, $options: 'i' };
+  }
+
+  if (frizzante !== undefined) {
+    filter.frizzante = frizzante === 'true';
+  }
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    filter.price = {};
+    if (minPrice !== undefined) {
+      filter.price.$gte = Number(minPrice);
+    }
+    if (maxPrice !== undefined) {
+      filter.price.$lte = Number(maxPrice);
+    }
+  }
+
+  if (minRating !== undefined) {
+    filter.rating = { $gte: Number(minRating) };
+  }
+
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { winery: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  // Сортування
+  const sortOptions = {};
+  const validSortFields = ['price', 'rating', 'anno', 'name', 'createdAt'];
+  const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
+
+  // Виконуємо запит
+  const [result, total] = await Promise.all([
+    Card.find(filter, '-createdAt -updatedAt')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(Number(limit))
+      .populate('owner', 'name email')
+      .populate('ratings.userId', 'name'),
+    Card.countDocuments(filter),
+  ]);
+
+  const totalPages = Math.ceil(total / Number(limit));
 
   res.json({
-    result,
-    total: result.length,
+    results: result,
+    total,
+    page: Number(page),
+    limit: Number(limit),
+    totalPages,
+    hasNextPage: Number(page) < totalPages,
+    hasPrevPage: Number(page) > 1,
   });
 };
 
