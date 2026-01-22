@@ -159,11 +159,22 @@ const remove = async (req, res) => {
 const update = async (req, res) => {
   const { id } = req.params;
   const { _id: owner } = req.user;
+  const { removeImage } = req.body;
 
   const updateData = { ...req.body };
+
+  // Якщо є новий файл - використовуємо його
   if (req.file) {
     updateData.img = req.file.path;
   }
+  // Якщо removeImage = true і немає нового файлу - видаляємо зображення
+  else if (removeImage === true || removeImage === 'true') {
+    updateData.img =
+      'https://res.cloudinary.com/demo/image/upload/wines/default.jpg';
+  }
+
+  // Видаляємо непотрібні поля з updateData
+  delete updateData.removeImage;
 
   const result = await Card.findOneAndUpdate({ _id: id, owner }, updateData, {
     new: true,
