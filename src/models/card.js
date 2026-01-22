@@ -82,6 +82,19 @@ const cardSchema = new Schema(
         },
       },
     ],
+    comments: [
+      {
+        userId: { type: Schema.Types.ObjectId, ref: 'user' },
+        username: { type: String },
+        text: {
+          type: String,
+          required: [true, 'Comment text is required'],
+          minlength: [1, 'Comment cannot be empty'],
+          maxlength: [1000, 'Comment cannot exceed 1000 characters'],
+        },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
     rating: {
       type: Number,
       default: 0,

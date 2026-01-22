@@ -235,6 +235,115 @@ const rateCard = async (req, res) => {
   res.json(result);
 };
 
+// Отримати коментарі картки з пагінацією
+const getComments = async (req, res) => {
+  const { id } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  const card = await Card.findById(id);
+  if (!card) {
+    return res.status(404).json({ message: 'Not found' });
+  }
+
+  // Сортуємо за датою створення (нові спочатку)
+  const sortedComments = [...card.comments].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+  );
+
+  // Пагінація
+  const total = sortedComments.length;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedComments = sortedComments.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    comments: paginatedComments,
+    total,
+    page,
+    limit,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+  });
+};
+
+// Додати коментар
+const addComment = async (req, res) => {
+  const { id } = req.params;
+  const { text } = req.body;
+  const userId = req.user._id;
+  const username = req.user.name || req.user.username || '';
+
+  // Валідація
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return res.status(400).json({ message: 'Comment text is required' });
+  }
+
+  if (text.length > 1000) {
+    return res
+      .status(400)
+      .json({ message: 'Comment cannot exceed 1000 characters' });
+  }
+
+  const card = await Card.findById(id);
+  if (!card) {
+    return res.status(404).json({ message: 'Card not found' });
+  }
+
+  card.comments.push({
+    userId,
+    username,
+    text: text.trim(),
+    createdAt: new Date(),
+  });
+
+  await card.save();
+
+  // Повертаємо оновлену картку з коментарями
+  const result = await Card.findById(id)
+    .populate('owner', 'name email')
+    .populate('ratings.userId', 'name');
+
+  res.status(201).json(result);
+};
+
+// Видалити коментар
+const deleteComment = async (req, res) => {
+  const { id, commentId } = req.params;
+  const userId = req.user._id;
+
+  const card = await Card.findById(id);
+  if (!card) {
+    return res.status(404).json({ message: 'Card not found' });
+  }
+
+  // Знаходимо коментар
+  const commentIndex = card.comments.findIndex(
+    (c) => c._id.toString() === commentId,
+  );
+
+  if (commentIndex === -1) {
+    return res.status(404).json({ message: 'Comment not found' });
+  }
+
+  // Перевіряємо, чи користувач є автором коментаря
+  const comment = card.comments[commentIndex];
+  if (comment.userId.toString() !== userId.toString()) {
+    return res
+      .status(403)
+      .json({ message: 'You can only delete your own comments' });
+  }
+
+  // Видаляємо коментар
+  card.comments.splice(commentIndex, 1);
+  await card.save();
+
+  res.json({ message: 'Comment deleted', cardId: id });
+};
+
 module.exports = {
   getAll,
   getById,
@@ -242,5 +351,8 @@ module.exports = {
   remove,
   update,
   rateCard,
+  getComments,
+  addComment,
+  deleteComment,
   cardSchema,
 };
