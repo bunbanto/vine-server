@@ -104,8 +104,7 @@ const getAll = async (req, res) => {
       .sort(sortOptions)
       .skip(skip)
       .limit(Number(limit))
-      .populate('owner', 'name email')
-      .populate('ratings.userId', 'name'),
+      .populate('owner', 'name email'),
     Card.countDocuments(filter),
   ]);
 

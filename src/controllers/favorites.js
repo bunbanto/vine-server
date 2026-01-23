@@ -12,7 +12,6 @@ const getFavorites = async (req, res) => {
   try {
     const cards = await Card.find({ favorites: userId })
       .populate('owner', 'name email')
-      .populate('ratings.userId', 'name')
       .sort({ createdAt: -1 });
 
     res.json({
@@ -59,13 +58,8 @@ const toggleFavorite = async (req, res) => {
 
     await card.save();
 
-    // Повертаємо оновлену картку з populated даними
-    const updatedCard = await Card.findById(cardId)
-      .populate('owner', 'name email')
-      .populate('ratings.userId', 'name');
-
     res.json({
-      card: updatedCard,
+      cardId,
       isFavorite: !isFavorite,
       message: isFavorite ? 'Removed from favorites' : 'Added to favorites',
     });

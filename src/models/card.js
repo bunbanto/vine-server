@@ -118,6 +118,9 @@ const cardSchema = new Schema(
   { versionKey: false, timestamps: true },
 );
 
+// Індекс для швидкого пошуку карток за списком улюблених
+cardSchema.index({ favorites: 1 });
+
 const Card = model('wines', cardSchema);
 
 module.exports = Card;
