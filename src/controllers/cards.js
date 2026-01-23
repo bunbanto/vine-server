@@ -109,10 +109,37 @@ const getAll = async (req, res) => {
     Card.countDocuments(filter),
   ]);
 
+  // Отримуємо ID поточного користувача з токена (якщо є)
+  let currentUserId = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+      currentUserId = decoded._id || decoded.id;
+    } catch (e) {
+      // Токен невалідний, продовжуємо без isFavorite
+    }
+  }
+
+  // Додаємо поле isFavorite до кожної картки
+  const resultsWithFavorite = result.map((card) => {
+    const cardObj = card.toObject();
+    if (currentUserId) {
+      cardObj.isFavorite = card.favorites.some(
+        (fav) => fav.toString() === currentUserId.toString(),
+      );
+    } else {
+      cardObj.isFavorite = false;
+    }
+    return cardObj;
+  });
+
   const totalPages = Math.ceil(total / Number(limit));
 
   res.json({
-    results: result,
+    results: resultsWithFavorite,
     total,
     page: Number(page),
     limit: Number(limit),
@@ -127,11 +154,37 @@ const getById = async (req, res) => {
   const { id } = req.params;
   const result = await Card.findById(id)
     .populate('owner', 'name email')
-    .populate('ratings.userId', 'name'); // Додано populate для імені користувача в рейтингах
+    .populate('ratings.userId', 'name');
+
   if (!result) {
     return res.status(404).json({ message: 'Not found' });
   }
-  res.json(result);
+
+  // Отримуємо ID поточного користувача з токена (якщо є)
+  let currentUserId = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+      currentUserId = decoded._id || decoded.id;
+    } catch (e) {
+      // Токен невалідний
+    }
+  }
+
+  // Додаємо поле isFavorite
+  const cardObj = result.toObject();
+  if (currentUserId) {
+    cardObj.isFavorite = result.favorites.some(
+      (fav) => fav.toString() === currentUserId.toString(),
+    );
+  } else {
+    cardObj.isFavorite = false;
+  }
+
+  res.json(cardObj);
 };
 
 // Додати картку

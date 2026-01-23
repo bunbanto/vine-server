@@ -106,6 +106,14 @@ const cardSchema = new Schema(
       ref: 'user',
       required: [true, 'Owner is required'],
     },
+    // Users who marked this wine as favorite
+    favorites: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'user',
+        default: [],
+      },
+    ],
   },
   { versionKey: false, timestamps: true },
 );

@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const authRouter = require('./routes/api/auth');
 const cardsRouter = require('./routes/api/cards');
+const favoritesRouter = require('./routes/api/favorites');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(express.json());
 
 app.use('/auth', authRouter);
 app.use('/cards', cardsRouter);
+app.use('/favorites', favoritesRouter);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Page Not found' });
