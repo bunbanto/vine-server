@@ -25,10 +25,27 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-];
+// Get allowed origins from environment variable or use defaults
+const getAllowedOrigins = () => {
+  const envOrigins = process.env.CORS_ORIGINS?.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  // Default origins for development
+  const defaultOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+    'http://localhost:4000',
+    'http://127.0.0.1:4000',
+  ];
+
+  // If CORS_ORIGINS is set, use it; otherwise use defaults
+  return envOrigins && envOrigins.length > 0 ? envOrigins : defaultOrigins;
+};
+
+const allowedOrigins = getAllowedOrigins();
 
 app.use(
   cors({
@@ -36,15 +53,28 @@ app.use(
       // Дозволити запити без origin (наприклад, мобільні додатки, Postman, curl)
       if (!origin) return callback(null, true);
 
+      // Check if origin is in allowed list
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        // Also allow origins that match localhost with any port
+        if (origin.match(/^http:\/\/(localhost|127\.0\.0\.1):\d+$/)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
       }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+    ],
+    exposedHeaders: ['Content-Length', 'X-Requested-With'],
     optionsSuccessStatus: 200, // Деякі старі браузери потребують цього
   }),
 );
