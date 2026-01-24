@@ -31,7 +31,7 @@ const getAllowedOrigins = () => {
     .map((o) => o.trim())
     .filter(Boolean);
 
-  // Default origins for development
+  // Default origins for development and production
   const defaultOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
@@ -39,6 +39,9 @@ const getAllowedOrigins = () => {
     'http://127.0.0.1:3001',
     'http://localhost:4000',
     'http://127.0.0.1:4000',
+    // Production Vercel domains
+    'https://degustazione-di-vino.vercel.app',
+    'https://vine-frontend.vercel.app',
   ];
 
   // If CORS_ORIGINS is set, use it; otherwise use defaults
