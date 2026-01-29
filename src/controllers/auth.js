@@ -1,6 +1,16 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const Card = require('../models/card');
+
+// Допоміжна функція для отримання статистики користувача
+const getUserStats = async (userId) => {
+  const [cardCount, favoritesCount] = await Promise.all([
+    Card.countDocuments({ owner: userId }),
+    Card.countDocuments({ favorites: userId }),
+  ]);
+  return { cardCount, favoritesCount };
+};
 
 const { JWT_SECRET } = process.env;
 
@@ -21,7 +31,13 @@ const register = async (req, res) => {
   const newUser = await User.create({ name, email, password: hashPassword });
 
   res.status(201).json({
-    user: { name: newUser.name, email: newUser.email },
+    user: {
+      name: newUser.name,
+      email: newUser.email,
+      createdAt: newUser.createdAt,
+      cardCount: 0,
+      favoritesCount: 0,
+    },
   });
 };
 
@@ -39,6 +55,8 @@ const login = async (req, res) => {
   }
 
   const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '24h' });
+  const stats = await getUserStats(user._id);
+
   res.json({
     token,
     user: {
@@ -47,14 +65,26 @@ const login = async (req, res) => {
       name: user.name || '',
       username: user.name || '',
       email: user.email,
+      createdAt: user.createdAt,
+      cardCount: stats.cardCount,
+      favoritesCount: stats.favoritesCount,
     },
   });
 };
 
 const getProfile = async (req, res) => {
-  const { _id, name, email } = req.user;
+  const { _id, name, email, createdAt } = req.user;
+  const stats = await getUserStats(_id);
+
   res.json({
-    user: { _id, name, email },
+    user: {
+      _id,
+      name,
+      email,
+      createdAt,
+      cardCount: stats.cardCount,
+      favoritesCount: stats.favoritesCount,
+    },
   });
 };
 
