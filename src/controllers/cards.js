@@ -6,7 +6,7 @@ const cardSchema = {
   color: {
     type: 'string',
     required: true,
-    pattern: /^(bianco|rosso|rosato|sparkling)$/,
+    pattern: /^(bianco|rosso|rosato)$/,
   },
   type: {
     type: 'string',

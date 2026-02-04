@@ -1,7 +1,7 @@
 const { Schema, model } = require('mongoose');
 
 const wineTypes = ['secco', 'abboccato', 'amabile', 'dolce'];
-const wineColors = ['bianco', 'rosso', 'rosato', 'sparkling'];
+const wineColors = ['bianco', 'rosso', 'rosato'];
 
 const cardSchema = new Schema(
   {
@@ -15,7 +15,7 @@ const cardSchema = new Schema(
       required: [true, 'Color is required'],
       enum: {
         values: wineColors,
-        message: 'Color must be one of: bianco, rosso, rosato, sparkling',
+        message: 'Color must be one of: bianco, rosso, rosato',
       },
     },
     type: {
