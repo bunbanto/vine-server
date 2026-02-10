@@ -9,10 +9,29 @@ const isValidObjectId = (id) => {
 const getFavorites = async (req, res) => {
   const userId = req.user._id;
 
+  // Параметри сортування
+  const {
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+    sortField,
+    sortDirection,
+  } = req.query;
+
+  // Визначаємо поле сортування
+  const effectiveSortBy = sortField || sortBy;
+  const effectiveSortOrder = sortDirection || sortOrder;
+
+  // Валідні поля сортування
+  const validSortFields = ['price', 'rating', 'anno', 'name', 'createdAt'];
+  const sortFieldValid = validSortFields.includes(effectiveSortBy)
+    ? effectiveSortBy
+    : 'createdAt';
+  const sortDirectionValue = effectiveSortOrder === 'asc' ? 1 : -1;
+
   try {
     const cards = await Card.find({ favorites: userId })
       .populate('owner', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ [sortFieldValid]: sortDirectionValue });
 
     res.json({
       results: cards,

@@ -39,10 +39,16 @@ const getAll = async (req, res) => {
     frizzante,
     sortBy = 'createdAt',
     sortOrder = 'desc',
+    sortField,
+    sortDirection,
     search,
   } = req.query;
 
   const skip = (Number(page) - 1) * Number(limit);
+
+  // Визначаємо поле сортування: нові параметри sortField/sortDirection або старі sortBy/sortOrder
+  const effectiveSortBy = sortField || sortBy;
+  const effectiveSortOrder = sortDirection || sortOrder;
 
   // Будуємо об'єкт фільтрації
   const filter = {};
@@ -95,8 +101,10 @@ const getAll = async (req, res) => {
   // Сортування
   const sortOptions = {};
   const validSortFields = ['price', 'rating', 'anno', 'name', 'createdAt'];
-  const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
-  sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
+  const sortFieldValid = validSortFields.includes(effectiveSortBy)
+    ? effectiveSortBy
+    : 'createdAt';
+  sortOptions[sortFieldValid] = effectiveSortOrder === 'asc' ? 1 : -1;
 
   // Виконуємо запит
   const [result, total] = await Promise.all([
