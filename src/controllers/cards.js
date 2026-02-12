@@ -253,10 +253,10 @@ const rateCard = async (req, res) => {
 
   // Валідація рейтингу
   const ratingValue = Number(rating);
-  if (isNaN(ratingValue) || ratingValue < 1 || ratingValue > 10) {
+  if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 10) {
     return res
       .status(400)
-      .json({ message: 'Rating must be a number between 1 and 10' });
+      .json({ message: 'Rating must be a number between 0 and 10' });
   }
 
   const card = await Card.findById(id);

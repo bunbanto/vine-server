@@ -77,7 +77,7 @@ const cardSchema = new Schema(
         username: { type: String },
         value: {
           type: Number,
-          min: [1, 'Rating must be at least 1'],
+          min: [0, 'Rating must be at least 0'],
           max: [10, 'Rating cannot exceed 10'],
         },
       },
