@@ -31,14 +31,13 @@ const getAllowedOrigins = () => {
     .map((o) => o.trim())
     .filter(Boolean);
 
-  // Default origins for development
+  // Default origins for local development + production deploy
   const defaultOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
-    'http://localhost:4000',
-    'http://127.0.0.1:4000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://wine-server-b5gr.onrender.com',
   ];
 
   // If CORS_ORIGINS is set, use it; otherwise use defaults
@@ -57,12 +56,8 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        // Also allow origins that match localhost with any port
-        if (origin.match(/^http:\/\/(localhost|127\.0\.0\.1):\d+$/)) {
-          callback(null, true);
-        }
         // Allow all Vercel preview and production domains
-        else if (
+        if (
           origin.match(/^https:\/\/.*\.vercel\.app$/) ||
           origin.match(/^https:\/\/vercel\.app$/)
         ) {
