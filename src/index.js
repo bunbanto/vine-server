@@ -24,60 +24,11 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
-// Get allowed origins from environment variable or use defaults
-const getAllowedOrigins = () => {
-  const envOrigins = process.env.CORS_ORIGINS?.split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-
-  // Default origins for local development + production deploy
-  const defaultOrigins = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://wine-server-b5gr.onrender.com',
-  ];
-
-  // If CORS_ORIGINS is set, use it; otherwise use defaults
-  return envOrigins && envOrigins.length > 0 ? envOrigins : defaultOrigins;
-};
-
-const allowedOrigins = getAllowedOrigins();
-
+// Simplified CORS: allow requests from any origin dynamically
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Дозволити запити без origin (наприклад, мобільні додатки, Postman, curl)
-      if (!origin) return callback(null, true);
-
-      // Check if origin is in allowed list
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        // Allow all Vercel preview and production domains
-        if (
-          origin.match(/^https:\/\/.*\.vercel\.app$/) ||
-          origin.match(/^https:\/\/vercel\.app$/)
-        ) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
-      }
-    },
+    origin: true,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-      'Origin',
-    ],
-    exposedHeaders: ['Content-Length', 'X-Requested-With'],
-    optionsSuccessStatus: 200, // Деякі старі браузери потребують цього
   }),
 );
 
