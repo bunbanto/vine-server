@@ -1,6 +1,8 @@
 const express = require('express');
 const ctrl = require('../../controllers/auth');
 const authenticate = require('../../middlewares/auth');
+const { validateBody } = require('../../middlewares/validate');
+const { registerSchema, loginSchema } = require('../../validation/auth');
 const router = express.Router();
 
 // Обгортка для відлову помилок (try/catch)
@@ -14,8 +16,8 @@ const ctrlWrapper = (ctrl) => {
   };
 };
 
-router.post('/register', ctrlWrapper(ctrl.register));
-router.post('/login', ctrlWrapper(ctrl.login));
+router.post('/register', validateBody(registerSchema), ctrlWrapper(ctrl.register));
+router.post('/login', validateBody(loginSchema), ctrlWrapper(ctrl.login));
 router.get('/profile', authenticate, ctrlWrapper(ctrl.getProfile));
 
 module.exports = router;

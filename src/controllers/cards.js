@@ -1,26 +1,19 @@
 const Card = require('../models/card');
+const jwt = require('jsonwebtoken');
 
-// Joi схема для валідації картки
-const cardSchema = {
-  name: { type: 'string', min: 2, required: true },
-  color: {
-    type: 'string',
-    required: true,
-    pattern: /^(bianco|rosso|rosato)$/,
-  },
-  type: {
-    type: 'string',
-    required: true,
-    pattern: /^(secco|abboccato|amabile|dolce)$/,
-  },
-  alcohol: { type: 'number', min: 0, max: 100, required: true },
-  winery: { type: 'string', min: 2, required: true },
-  region: { type: 'string', min: 2, required: true },
-  country: { type: 'string', min: 2, required: true },
-  anno: { type: 'number', min: 1900, max: 2030, required: true },
-  price: { type: 'number', min: 0, required: true },
-  frizzante: { type: 'boolean' },
-  description: { type: 'string', max: 2000 },
+const { JWT_SECRET } = process.env;
+
+const getCurrentUserIdFromAuthHeader = (authHeader) => {
+  if (!authHeader || !authHeader.startsWith('Bearer ') || !JWT_SECRET) {
+    return null;
+  }
+
+  try {
+    const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
+    return decoded._id || decoded.id || null;
+  } catch (error) {
+    return null;
+  }
 };
 
 // Отримати всі картки з пагінацією, фільтрацією та сортуванням
@@ -117,18 +110,7 @@ const getAll = async (req, res) => {
   ]);
 
   // Отримуємо ID поточного користувача з токена (якщо є)
-  let currentUserId = null;
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    try {
-      const jwt = require('jsonwebtoken');
-      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
-      currentUserId = decoded._id || decoded.id;
-    } catch (e) {
-      // Токен невалідний, продовжуємо без isFavorite
-    }
-  }
+  const currentUserId = getCurrentUserIdFromAuthHeader(req.headers.authorization);
 
   // Додаємо поле isFavorite до кожної картки
   const resultsWithFavorite = result.map((card) => {
@@ -168,18 +150,7 @@ const getById = async (req, res) => {
   }
 
   // Отримуємо ID поточного користувача з токена (якщо є)
-  let currentUserId = null;
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    try {
-      const jwt = require('jsonwebtoken');
-      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-      const decoded = jwt.verify(authHeader.split(' ')[1], JWT_SECRET);
-      currentUserId = decoded._id || decoded.id;
-    } catch (e) {
-      // Токен невалідний
-    }
-  }
+  const currentUserId = getCurrentUserIdFromAuthHeader(req.headers.authorization);
 
   // Додаємо поле isFavorite
   const cardObj = result.toObject();
@@ -235,6 +206,10 @@ const update = async (req, res) => {
 
   // Видаляємо непотрібні поля з updateData
   delete updateData.removeImage;
+
+  if (!req.file && Object.keys(updateData).length === 0) {
+    return res.status(400).json({ message: 'No data provided for update' });
+  }
 
   const result = await Card.findOneAndUpdate({ _id: id, owner }, updateData, {
     new: true,
@@ -414,5 +389,4 @@ module.exports = {
   getComments,
   addComment,
   deleteComment,
-  cardSchema,
 };

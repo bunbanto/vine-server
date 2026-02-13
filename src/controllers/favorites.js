@@ -1,10 +1,5 @@
 const Card = require('../models/card');
 
-// Перевірка валідації ObjectId
-const isValidObjectId = (id) => {
-  return id.match(/^[0-9a-fA-F]{24}$/);
-};
-
 // Отримати всі улюблені картки користувача
 const getFavorites = async (req, res) => {
   const userId = req.user._id;
@@ -47,11 +42,6 @@ const getFavorites = async (req, res) => {
 const toggleFavorite = async (req, res) => {
   const { id: cardId } = req.params;
   const userId = req.user._id;
-
-  // Валідація cardId
-  if (!isValidObjectId(cardId)) {
-    return res.status(400).json({ message: 'Invalid card ID' });
-  }
 
   try {
     const card = await Card.findById(cardId);
@@ -96,11 +86,6 @@ const checkFavorite = async (req, res) => {
   // Якщо користувач не авторизований
   if (!userId) {
     return res.json({ isFavorite: false });
-  }
-
-  // Валідація cardId
-  if (!isValidObjectId(cardId)) {
-    return res.status(400).json({ message: 'Invalid card ID' });
   }
 
   try {

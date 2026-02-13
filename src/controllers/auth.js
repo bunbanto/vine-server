@@ -12,7 +12,7 @@ const getUserStats = async (userId) => {
   return { cardCount, favoritesCount };
 };
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, JWT_EXPIRES_IN = '24h' } = process.env;
 
 if (!JWT_SECRET) {
   console.error('JWT_SECRET is not defined in environment variables');
@@ -54,7 +54,9 @@ const login = async (req, res) => {
     return res.status(401).json({ message: 'Email or password is wrong' });
   }
 
-  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '24h' });
+  const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+  });
   const stats = await getUserStats(user._id);
 
   res.json({

@@ -98,8 +98,39 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  const { status = 500, message = 'Server error' } = err;
-  res.status(status).json({ message });
+  let { status = 500, message = 'Server error', details } = err;
+
+  if (err.name === 'CastError') {
+    status = 400;
+    message = 'Invalid identifier format';
+  }
+
+  if (err.name === 'ValidationError') {
+    status = 400;
+    message = err.message;
+  }
+
+  if (err.code === 11000) {
+    status = 409;
+    const duplicatedField = Object.keys(err.keyPattern || {})[0] || 'field';
+    message = `${duplicatedField} already exists`;
+  }
+
+  if (err.name === 'MulterError') {
+    status = 400;
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'Image size cannot exceed 5MB';
+    } else {
+      message = err.message;
+    }
+  }
+
+  const response = { message };
+  if (details) {
+    response.details = details;
+  }
+
+  res.status(status).json(response);
 });
 
 module.exports = app;
