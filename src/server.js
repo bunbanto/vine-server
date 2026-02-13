@@ -2,7 +2,7 @@ const app = require('./index');
 const connectDB = require('./db/connection');
 
 const { PORT = 4000 } = process.env;
-const HOST = process.env.HOST || 'localhost';
+const HOST = process.env.HOST || '0.0.0.0';
 const EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL;
 
 const startServer = async () => {
