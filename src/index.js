@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const logger = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -34,6 +35,9 @@ app.use(
 
 app.use(logger(formatsLogger));
 app.use(express.json());
+
+const docsPath = path.resolve(__dirname, '../docs');
+app.use('/docs', express.static(docsPath));
 
 app.use('/auth', authRouter);
 app.use('/cards', cardsRouter);

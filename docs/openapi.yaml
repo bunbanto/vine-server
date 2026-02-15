@@ -1,0 +1,1020 @@
+openapi: 3.0.3
+info:
+  title: Vine Server API
+  version: 1.0.0
+  description: API documentation for authentication, wine cards, comments, ratings, and favorites.
+  license:
+    name: ISC
+    url: https://opensource.org/license/isc-license-txt
+servers:
+  - url: https://api.vine-server.local
+    description: API server
+
+tags:
+  - name: Auth
+    description: User registration, login, and profile endpoints.
+  - name: Cards
+    description: Wine cards, ratings, and comments endpoints.
+  - name: Favorites
+    description: Manage favorite cards for authorized users.
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CardIdParam:
+      name: id
+      in: path
+      required: true
+      description: Card ID (MongoDB ObjectId)
+      schema:
+        type: string
+        pattern: '^[a-fA-F0-9]{24}$'
+    CommentIdParam:
+      name: commentId
+      in: path
+      required: true
+      description: Comment ID (MongoDB ObjectId)
+      schema:
+        type: string
+        pattern: '^[a-fA-F0-9]{24}$'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+      required:
+        - message
+
+    UserPublic:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 65f2d95a6f7d0e4f7f8f2d11
+        id:
+          type: string
+          example: 65f2d95a6f7d0e4f7f8f2d11
+        name:
+          type: string
+          example: Yurii
+        username:
+          type: string
+          example: Yurii
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-15T12:00:00.000Z'
+        cardCount:
+          type: integer
+          example: 3
+        favoritesCount:
+          type: integer
+          example: 1
+
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Yurii
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          maxLength: 128
+          example: secret123
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: secret123
+
+    RegisterResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserPublic'
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: jwt.token.here
+        user:
+          $ref: '#/components/schemas/UserPublic'
+      required:
+        - token
+        - user
+
+    ProfileResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserPublic'
+      required:
+        - user
+
+    Owner:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 65f2d95a6f7d0e4f7f8f2d11
+        name:
+          type: string
+          example: Yurii
+        email:
+          type: string
+          format: email
+          example: user@example.com
+
+    RatingItem:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          oneOf:
+            - type: string
+              example: 65f2d95a6f7d0e4f7f8f2d11
+            - type: object
+              properties:
+                _id:
+                  type: string
+                name:
+                  type: string
+        username:
+          type: string
+          example: Yurii
+        value:
+          type: number
+          minimum: 0
+          maximum: 10
+          example: 8.5
+
+    CommentItem:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 65f2e4bcd4a4f6f48d839acd
+        userId:
+          type: string
+          example: 65f2d95a6f7d0e4f7f8f2d11
+        username:
+          type: string
+          example: Yurii
+        text:
+          type: string
+          maxLength: 1000
+          example: Nice taste and aroma.
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-15T12:00:00.000Z'
+
+    CardBaseFields:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Prosecco DOC
+        color:
+          type: string
+          enum: [bianco, rosso, rosato]
+          example: bianco
+        type:
+          type: string
+          enum: [secco, abboccato, amabile, dolce]
+          example: secco
+        alcohol:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 11.5
+        winery:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Villa Sandi
+        region:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Veneto
+        country:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: Italy
+        anno:
+          type: integer
+          minimum: 1900
+          maximum: 2030
+          example: 2022
+        price:
+          type: number
+          minimum: 0
+          example: 15.99
+        frizzante:
+          type: boolean
+          example: true
+        description:
+          type: string
+          maxLength: 2000
+          example: Fresh and fruity sparkling wine.
+
+    Card:
+      allOf:
+        - $ref: '#/components/schemas/CardBaseFields'
+        - type: object
+          properties:
+            _id:
+              type: string
+              example: 65f2e2d6b8e6ce4f3c1d9f0a
+            img:
+              type: string
+              format: uri
+              example: https://res.cloudinary.com/demo/image/upload/wines/default.jpg
+            rating:
+              type: number
+              minimum: 0
+              maximum: 10
+              example: 8.3
+            ratings:
+              type: array
+              items:
+                $ref: '#/components/schemas/RatingItem'
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommentItem'
+            owner:
+              oneOf:
+                - type: string
+                - $ref: '#/components/schemas/Owner'
+            favorites:
+              type: array
+              items:
+                type: string
+            isFavorite:
+              type: boolean
+              example: false
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    CreateCardRequest:
+      allOf:
+        - $ref: '#/components/schemas/CardBaseFields'
+        - type: object
+          required:
+            - name
+            - color
+            - type
+            - alcohol
+            - winery
+            - region
+            - country
+            - anno
+            - price
+
+    UpdateCardRequest:
+      allOf:
+        - $ref: '#/components/schemas/CardBaseFields'
+        - type: object
+          properties:
+            removeImage:
+              type: boolean
+              example: true
+
+    RateCardRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: number
+          minimum: 0
+          maximum: 10
+          example: 9
+        username:
+          type: string
+          maxLength: 100
+          example: Yurii
+
+    AddCommentRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          example: Very elegant wine.
+
+    CardsListResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+      required:
+        - results
+        - total
+        - page
+        - limit
+        - totalPages
+        - hasNextPage
+        - hasPrevPage
+
+    CommentsListResponse:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentItem'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+      required:
+        - comments
+        - total
+        - page
+        - limit
+        - totalPages
+        - hasNextPage
+        - hasPrevPage
+
+    FavoritesListResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+        total:
+          type: integer
+      required:
+        - results
+        - total
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/profile:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      operationId: getCurrentUserProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards:
+    get:
+      tags: [Cards]
+      summary: Get cards list with filters and pagination
+      operationId: getCards
+      security: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: color
+          in: query
+          schema:
+            type: string
+            enum: [bianco, rosso, rosato]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [secco, abboccato, amabile, dolce]
+        - name: country
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 120
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: minRating
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 10
+        - name: winery
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: region
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: frizzante
+          in: query
+          schema:
+            type: boolean
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [price, rating, anno, name, createdAt]
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: sortField
+          in: query
+          schema:
+            type: string
+            enum: [price, rating, anno, name, createdAt]
+        - name: sortDirection
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+      responses:
+        '200':
+          description: Cards list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardsListResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Cards]
+      summary: Create card
+      operationId: createCard
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CreateCardRequest'
+                - type: object
+                  properties:
+                    img:
+                      type: string
+                      format: binary
+      responses:
+        '201':
+          description: Card created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          description: Validation or upload error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/{id}:
+    get:
+      tags: [Cards]
+      summary: Get card by ID
+      operationId: getCardById
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      responses:
+        '200':
+          description: Card details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Cards]
+      summary: Update card
+      operationId: updateCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/UpdateCardRequest'
+                - type: object
+                  properties:
+                    img:
+                      type: string
+                      format: binary
+      responses:
+        '200':
+          description: Card updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          description: Validation error or empty update payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Cards]
+      summary: Delete own card
+      operationId: deleteCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      responses:
+        '200':
+          description: Card deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Card deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/{id}/rate:
+    patch:
+      tags: [Cards]
+      summary: Add or update card rating
+      operationId: rateCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RateCardRequest'
+      responses:
+        '200':
+          description: Updated card with new rating
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/{id}/comments:
+    get:
+      tags: [Cards]
+      summary: Get card comments
+      operationId: getCardComments
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentsListResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Cards]
+      summary: Add comment to card
+      operationId: addCardComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '201':
+          description: Card with added comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /cards/{id}/comments/{commentId}:
+    delete:
+      tags: [Cards]
+      summary: Delete own comment from card
+      operationId: deleteCardComment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+        - $ref: '#/components/parameters/CommentIdParam'
+      responses:
+        '200':
+          description: Comment deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Comment deleted
+                  cardId:
+                    type: string
+                    example: 65f2e2d6b8e6ce4f3c1d9f0a
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card or comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites:
+    get:
+      tags: [Favorites]
+      summary: Get current user favorite cards
+      operationId: getFavorites
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [price, rating, anno, name, createdAt]
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: sortField
+          in: query
+          schema:
+            type: string
+            enum: [price, rating, anno, name, createdAt]
+        - name: sortDirection
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: Favorites list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoritesListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favorites/{id}:
+    post:
+      tags: [Favorites]
+      summary: Toggle favorite for a card
+      operationId: toggleFavoriteCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      responses:
+        '200':
+          description: Favorite status changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cardId:
+                    type: string
+                    example: 65f2e2d6b8e6ce4f3c1d9f0a
+                  isFavorite:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Added to favorites
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Favorites]
+      summary: Check if card is favorite
+      operationId: checkFavoriteCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CardIdParam'
+      responses:
+        '200':
+          description: Favorite status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isFavorite:
+                    type: boolean
+                    example: true
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
