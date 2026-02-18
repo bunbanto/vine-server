@@ -1,13 +1,11 @@
 const { Joi, objectId } = require('./common');
-
-const wineColors = ['bianco', 'rosso', 'rosato'];
-const wineTypes = ['secco', 'abboccato', 'amabile', 'dolce'];
+const { WINE_TYPES, WINE_COLORS } = require('../constants/wine');
 const sortableFields = ['price', 'rating', 'anno', 'name', 'createdAt'];
 
 const cardBaseSchema = {
   name: Joi.string().trim().min(2).max(120),
-  color: Joi.string().valid(...wineColors),
-  type: Joi.string().valid(...wineTypes),
+  color: Joi.string().valid(...WINE_COLORS),
+  type: Joi.string().valid(...WINE_TYPES),
   alcohol: Joi.number().min(0).max(100),
   winery: Joi.string().trim().min(2).max(120),
   region: Joi.string().trim().min(2).max(120),
@@ -48,8 +46,8 @@ const cardCommentParamsSchema = Joi.object({
 const cardsQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
-  color: Joi.string().valid(...wineColors),
-  type: Joi.string().valid(...wineTypes),
+  color: Joi.string().valid(...WINE_COLORS),
+  type: Joi.string().valid(...WINE_TYPES),
   country: Joi.string().trim().min(2).max(120),
   minPrice: Joi.number().min(0),
   maxPrice: Joi.number().min(0),

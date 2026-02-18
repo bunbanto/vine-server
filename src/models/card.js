@@ -1,7 +1,5 @@
 const { Schema, model } = require('mongoose');
-
-const wineTypes = ['secco', 'abboccato', 'amabile', 'dolce'];
-const wineColors = ['bianco', 'rosso', 'rosato'];
+const { WINE_TYPES, WINE_COLORS } = require('../constants/wine');
 
 const cardSchema = new Schema(
   {
@@ -14,16 +12,16 @@ const cardSchema = new Schema(
       type: String,
       required: [true, 'Color is required'],
       enum: {
-        values: wineColors,
-        message: 'Color must be one of: bianco, rosso, rosato',
+        values: WINE_COLORS,
+        message: `Color must be one of: ${WINE_COLORS.join(', ')}`,
       },
     },
     type: {
       type: String,
       required: [true, 'Type is required'],
       enum: {
-        values: wineTypes,
-        message: 'Type must be one of: secco, abboccato, amabile, dolce',
+        values: WINE_TYPES,
+        message: `Type must be one of: ${WINE_TYPES.join(', ')}`,
       },
     },
     alcohol: {
@@ -118,7 +116,7 @@ const cardSchema = new Schema(
   { versionKey: false, timestamps: true },
 );
 
-// Індекс для швидкого пошуку карток за списком улюблених
+// Index for faster lookup by favorites list
 cardSchema.index({ favorites: 1 });
 
 const Card = model('wines', cardSchema);
