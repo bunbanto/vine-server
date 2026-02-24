@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 
 const { JWT_SECRET } = process.env;
 
+const roundToHalf = (value) => Math.round(Number(value) / 0.5) * 0.5;
+
 const getCurrentUserIdFromAuthHeader = (authHeader) => {
   if (!authHeader || !authHeader.startsWith('Bearer ') || !JWT_SECRET) {
     return null;
@@ -115,6 +117,7 @@ const getAll = async (req, res) => {
   // Додаємо поле isFavorite до кожної картки
   const resultsWithFavorite = result.map((card) => {
     const cardObj = card.toObject();
+    cardObj.rating = roundToHalf(cardObj.rating);
     if (currentUserId) {
       cardObj.isFavorite = card.favorites.some(
         (fav) => fav.toString() === currentUserId.toString(),
@@ -154,6 +157,7 @@ const getById = async (req, res) => {
 
   // Додаємо поле isFavorite
   const cardObj = result.toObject();
+  cardObj.rating = roundToHalf(cardObj.rating);
   if (currentUserId) {
     cardObj.isFavorite = result.favorites.some(
       (fav) => fav.toString() === currentUserId.toString(),
@@ -258,7 +262,7 @@ const rateCard = async (req, res) => {
 
   // Перерахунок середнього рейтингу
   const totalRating = card.ratings.reduce((acc, curr) => acc + curr.value, 0);
-  card.rating = parseFloat((totalRating / card.ratings.length).toFixed(1));
+  card.rating = roundToHalf(totalRating / card.ratings.length);
 
   await card.save();
 
@@ -267,7 +271,10 @@ const rateCard = async (req, res) => {
     .populate('owner', 'name email')
     .populate('ratings.userId', 'name');
 
-  res.json(result);
+  const cardObj = result.toObject();
+  cardObj.rating = roundToHalf(cardObj.rating);
+
+  res.json(cardObj);
 };
 
 // Отримати коментарі картки з пагінацією
