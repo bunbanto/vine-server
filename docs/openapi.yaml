@@ -223,8 +223,9 @@ components:
           example: bianco
         type:
           type: string
-          enum: [secco, abboccato, amabile, dolce]
-          example: secco
+          enum:
+            [wine, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
+          example: whiskey
         alcohol:
           type: number
           minimum: 0
@@ -315,9 +316,7 @@ components:
             - type
             - alcohol
             - winery
-            - region
             - country
-            - anno
             - price
 
     UpdateCardRequest:
@@ -533,7 +532,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: [secco, abboccato, amabile, dolce]
+            enum:
+              [wine, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
         - name: country
           in: query
           schema:

@@ -1,5 +1,9 @@
 const { Schema, model } = require('mongoose');
-const { WINE_TYPES, WINE_COLORS } = require('../constants/wine');
+const {
+  WINE_TYPES,
+  WINE_COLORS,
+  isWineType,
+} = require('../constants/wine');
 
 const cardSchema = new Schema(
   {
@@ -37,7 +41,12 @@ const cardSchema = new Schema(
     },
     region: {
       type: String,
-      required: [true, 'Region is required'],
+      required: [
+        function regionRequired() {
+          return isWineType(this.type);
+        },
+        'Region is required for wine types',
+      ],
       minlength: [2, 'Region name must be at least 2 characters'],
     },
     country: {
@@ -47,7 +56,6 @@ const cardSchema = new Schema(
     },
     anno: {
       type: Number,
-      required: [true, 'Vintage year is required'],
       min: [1900, 'Vintage year must be at least 1900'],
       max: [2030, 'Vintage year cannot exceed 2030'],
     },

@@ -1,5 +1,9 @@
 const { Joi, objectId } = require('./common');
-const { WINE_TYPES, WINE_COLORS } = require('../constants/wine');
+const {
+  WINE_TYPES,
+  WINE_COLORS,
+  isWineType,
+} = require('../constants/wine');
 const sortableFields = ['price', 'rating', 'anno', 'name', 'createdAt'];
 
 const cardBaseSchema = {
@@ -23,10 +27,14 @@ const createCardBodySchema = Joi.object({
   type: cardBaseSchema.type.required(),
   alcohol: cardBaseSchema.alcohol.required(),
   winery: cardBaseSchema.winery.required(),
-  region: cardBaseSchema.region.required(),
   country: cardBaseSchema.country.required(),
-  anno: cardBaseSchema.anno.required(),
   price: cardBaseSchema.price.required(),
+}).custom((value, helper) => {
+  if (isWineType(value.type) && !value.region) {
+    return helper.message('region is required for wine types');
+  }
+
+  return value;
 });
 
 const updateCardBodySchema = Joi.object({
