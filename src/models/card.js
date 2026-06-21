@@ -72,6 +72,10 @@ const cardSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    unfiltered: {
+      type: Boolean,
+      default: false,
+    },
     description: {
       type: String,
       default: '',

@@ -1,5 +1,6 @@
 const DRINK_TYPES = [
   'wine',
+  'beer',
   'whiskey',
   'brandy',
   'gin',
@@ -11,7 +12,7 @@ const DRINK_TYPES = [
 ];
 const LEGACY_WINE_TYPES = ['secco', 'abboccato', 'amabile', 'dolce'];
 const WINE_TYPES = [...DRINK_TYPES, ...LEGACY_WINE_TYPES];
-const WINE_COLORS = ['bianco', 'rosso', 'rosato'];
+const WINE_COLORS = ['bianco', 'rosso', 'rosato', 'light', 'dark'];
 const WINE_TYPES_REQUIRING_REGION = ['wine', ...LEGACY_WINE_TYPES];
 
 const isWineType = (type) => WINE_TYPES_REQUIRING_REGION.includes(type);

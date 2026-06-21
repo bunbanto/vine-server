@@ -17,6 +17,7 @@ const cardBaseSchema = {
   anno: Joi.number().integer().min(1900).max(2030),
   price: Joi.number().min(0),
   frizzante: Joi.boolean(),
+  unfiltered: Joi.boolean(),
   description: Joi.string().max(2000).allow(''),
 };
 
@@ -63,6 +64,7 @@ const cardsQuerySchema = Joi.object({
   winery: Joi.string().trim().max(120),
   region: Joi.string().trim().max(120),
   frizzante: Joi.boolean(),
+  unfiltered: Joi.boolean(),
   sortBy: Joi.string().valid(...sortableFields),
   sortOrder: Joi.string().valid('asc', 'desc'),
   sortField: Joi.string().valid(...sortableFields),

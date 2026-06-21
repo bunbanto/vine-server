@@ -32,6 +32,7 @@ const getAll = async (req, res) => {
     winery,
     region,
     frizzante,
+    unfiltered,
     sortBy = 'createdAt',
     sortOrder = 'desc',
     sortField,
@@ -70,6 +71,10 @@ const getAll = async (req, res) => {
 
   if (frizzante !== undefined) {
     filter.frizzante = frizzante === 'true';
+  }
+
+  if (unfiltered !== undefined) {
+    filter.unfiltered = unfiltered === 'true';
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {

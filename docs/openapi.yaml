@@ -219,12 +219,12 @@ components:
           example: Prosecco DOC
         color:
           type: string
-          enum: [bianco, rosso, rosato]
+          enum: [bianco, rosso, rosato, light, dark]
           example: bianco
         type:
           type: string
           enum:
-            [wine, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
+            [wine, beer, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
           example: whiskey
         alcohol:
           type: number
@@ -258,6 +258,9 @@ components:
         frizzante:
           type: boolean
           example: true
+        unfiltered:
+          type: boolean
+          example: false
         description:
           type: string
           maxLength: 2000
@@ -527,13 +530,13 @@ paths:
           in: query
           schema:
             type: string
-            enum: [bianco, rosso, rosato]
+            enum: [bianco, rosso, rosato, light, dark]
         - name: type
           in: query
           schema:
             type: string
             enum:
-              [wine, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
+              [wine, beer, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
         - name: country
           in: query
           schema:
@@ -567,6 +570,10 @@ paths:
             type: string
             maxLength: 120
         - name: frizzante
+          in: query
+          schema:
+            type: boolean
+        - name: unfiltered
           in: query
           schema:
             type: boolean
