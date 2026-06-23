@@ -231,6 +231,12 @@ components:
           minimum: 0
           maximum: 100
           example: 11.5
+        volume:
+          type: number
+          minimum: 1
+          maximum: 100000
+          description: Drink volume in milliliters
+          example: 750
         winery:
           type: string
           minLength: 2

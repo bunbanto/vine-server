@@ -11,6 +11,7 @@ const cardBaseSchema = {
   color: Joi.string().valid(...WINE_COLORS),
   type: Joi.string().valid(...WINE_TYPES),
   alcohol: Joi.number().min(0).max(100),
+  volume: Joi.number().min(1).max(100000),
   winery: Joi.string().trim().min(2).max(120),
   region: Joi.string().trim().min(2).max(120),
   country: Joi.string().trim().min(2).max(120),

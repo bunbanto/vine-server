@@ -34,6 +34,11 @@ const cardSchema = new Schema(
       min: [0, 'Alcohol cannot be less than 0'],
       max: [100, 'Alcohol cannot be more than 100'],
     },
+    volume: {
+      type: Number,
+      min: [1, 'Volume must be at least 1 ml'],
+      max: [100000, 'Volume cannot exceed 100000 ml'],
+    },
     winery: {
       type: String,
       required: [true, 'Winery is required'],
