@@ -13,6 +13,12 @@ const getUserStats = async (userId) => {
 };
 
 const { JWT_SECRET, JWT_EXPIRES_IN = '24h' } = process.env;
+const ADMIN_EMAIL = 'bunbanto@gmail.com';
+
+const getUserRole = (user) =>
+  user?.email?.trim().toLowerCase() === ADMIN_EMAIL || user?.role === 'admin'
+    ? 'admin'
+    : 'user';
 
 if (!JWT_SECRET) {
   console.error('JWT_SECRET is not defined in environment variables');
@@ -34,6 +40,7 @@ const register = async (req, res) => {
     user: {
       name: newUser.name,
       email: newUser.email,
+      role: getUserRole(newUser),
       createdAt: newUser.createdAt,
       cardCount: 0,
       favoritesCount: 0,
@@ -67,6 +74,7 @@ const login = async (req, res) => {
       name: user.name || '',
       username: user.name || '',
       email: user.email,
+      role: getUserRole(user),
       createdAt: user.createdAt,
       cardCount: stats.cardCount,
       favoritesCount: stats.favoritesCount,
@@ -83,6 +91,7 @@ const getProfile = async (req, res) => {
       _id,
       name,
       email,
+      role: getUserRole(req.user),
       createdAt,
       cardCount: stats.cardCount,
       favoritesCount: stats.favoritesCount,
