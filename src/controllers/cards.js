@@ -2,8 +2,15 @@ const Card = require('../models/card');
 const jwt = require('jsonwebtoken');
 
 const { JWT_SECRET } = process.env;
+const ADMIN_EMAIL = 'bunbanto@gmail.com';
 
 const roundToHalf = (value) => Math.round(Number(value) / 0.5) * 0.5;
+
+const isAdmin = (user) =>
+  user?.email?.trim().toLowerCase() === ADMIN_EMAIL || user?.role === 'admin';
+
+const getEditableCardFilter = (id, user) =>
+  isAdmin(user) ? { _id: id } : { _id: id, owner: user._id };
 
 const getCurrentUserIdFromAuthHeader = (authHeader) => {
   if (!authHeader || !authHeader.startsWith('Bearer ') || !JWT_SECRET) {
@@ -187,8 +194,9 @@ const add = async (req, res) => {
 // Видалити картку
 const remove = async (req, res) => {
   const { id } = req.params;
-  const { _id: owner } = req.user;
-  const result = await Card.findOneAndDelete({ _id: id, owner });
+  const result = await Card.findOneAndDelete(
+    getEditableCardFilter(id, req.user),
+  );
   if (!result) {
     return res.status(404).json({ message: 'Not found' });
   }
@@ -198,7 +206,6 @@ const remove = async (req, res) => {
 // Редагувати картку (всі поля)
 const update = async (req, res) => {
   const { id } = req.params;
-  const { _id: owner } = req.user;
   const { removeImage } = req.body;
 
   const updateData = { ...req.body };
@@ -220,9 +227,13 @@ const update = async (req, res) => {
     return res.status(400).json({ message: 'No data provided for update' });
   }
 
-  const result = await Card.findOneAndUpdate({ _id: id, owner }, updateData, {
-    new: true,
-  });
+  const result = await Card.findOneAndUpdate(
+    getEditableCardFilter(id, req.user),
+    updateData,
+    {
+      new: true,
+    },
+  );
   if (!result) {
     return res.status(404).json({ message: 'Not found' });
   }
