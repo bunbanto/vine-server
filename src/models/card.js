@@ -129,6 +129,21 @@ const cardSchema = new Schema(
         default: [],
       },
     ],
+    adminEdits: [
+      {
+        adminId: { type: Schema.Types.ObjectId, ref: 'user' },
+        adminName: { type: String },
+        adminEmail: { type: String },
+        changedAt: { type: Date, default: Date.now },
+        changes: [
+          {
+            field: { type: String, required: true },
+            oldValue: { type: Schema.Types.Mixed },
+            newValue: { type: Schema.Types.Mixed },
+          },
+        ],
+      },
+    ],
   },
   { versionKey: false, timestamps: true },
 );

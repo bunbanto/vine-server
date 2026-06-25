@@ -12,6 +12,44 @@ const isAdmin = (user) =>
 const getEditableCardFilter = (id, user) =>
   isAdmin(user) ? { _id: id } : { _id: id, owner: user._id };
 
+const normalizeChangeValue = (value) => {
+  if (value === undefined) {
+    return null;
+  }
+
+  if (value && typeof value.toObject === 'function') {
+    return value.toObject();
+  }
+
+  return value;
+};
+
+const valuesAreEqual = (oldValue, newValue) =>
+  JSON.stringify(normalizeChangeValue(oldValue)) ===
+  JSON.stringify(normalizeChangeValue(newValue));
+
+const buildAdminEditEntry = (card, updateData, admin) => {
+  const changes = Object.keys(updateData)
+    .filter((field) => !valuesAreEqual(card.get(field), updateData[field]))
+    .map((field) => ({
+      field,
+      oldValue: normalizeChangeValue(card.get(field)),
+      newValue: normalizeChangeValue(updateData[field]),
+    }));
+
+  if (changes.length === 0) {
+    return null;
+  }
+
+  return {
+    adminId: admin._id,
+    adminName: admin.name,
+    adminEmail: admin.email,
+    changedAt: new Date(),
+    changes,
+  };
+};
+
 const getCurrentUserIdFromAuthHeader = (authHeader) => {
   if (!authHeader || !authHeader.startsWith('Bearer ') || !JWT_SECRET) {
     return null;
@@ -227,16 +265,23 @@ const update = async (req, res) => {
     return res.status(400).json({ message: 'No data provided for update' });
   }
 
-  const result = await Card.findOneAndUpdate(
-    getEditableCardFilter(id, req.user),
-    updateData,
-    {
-      new: true,
-    },
-  );
-  if (!result) {
+  const card = await Card.findOne(getEditableCardFilter(id, req.user));
+  if (!card) {
     return res.status(404).json({ message: 'Not found' });
   }
+
+  const adminEdit = isAdmin(req.user)
+    ? buildAdminEditEntry(card, updateData, req.user)
+    : null;
+
+  Object.assign(card, updateData);
+
+  if (adminEdit) {
+    card.adminEdits = card.adminEdits || [];
+    card.adminEdits.push(adminEdit);
+  }
+
+  const result = await card.save();
   res.json(result);
 };
 
