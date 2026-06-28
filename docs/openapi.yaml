@@ -226,6 +226,11 @@ components:
           enum:
             [wine, beer, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
           example: whiskey
+        sweetness:
+          type: string
+          enum: [secco, abboccato, amabile, dolce]
+          description: Wine sweetness/style, only used for wine cards.
+          example: secco
         alcohol:
           type: number
           minimum: 0
@@ -543,6 +548,11 @@ paths:
             type: string
             enum:
               [wine, beer, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
+        - name: sweetness
+          in: query
+          schema:
+            type: string
+            enum: [secco, abboccato, amabile, dolce]
         - name: country
           in: query
           schema:

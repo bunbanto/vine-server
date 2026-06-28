@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 const jwt = require('jsonwebtoken');
+const { WINE_SWEETNESS } = require('../constants/wine');
 
 const { JWT_SECRET } = process.env;
 const ADMIN_EMAIL = 'bunbanto@gmail.com';
@@ -63,6 +64,8 @@ const getCurrentUserIdFromAuthHeader = (authHeader) => {
   }
 };
 
+const legacyWineTypeFilter = { type: { $in: ['wine', ...WINE_SWEETNESS] } };
+
 // Отримати всі картки з пагінацією, фільтрацією та сортуванням
 const getAll = async (req, res) => {
   const {
@@ -78,6 +81,7 @@ const getAll = async (req, res) => {
     region,
     frizzante,
     unfiltered,
+    sweetness,
     sortBy = 'createdAt',
     sortOrder = 'desc',
     sortField,
@@ -99,7 +103,14 @@ const getAll = async (req, res) => {
   }
 
   if (type) {
-    filter.type = type;
+    filter.type = type === 'wine' ? legacyWineTypeFilter.type : type;
+  }
+
+  if (sweetness) {
+    filter.$and = filter.$and || [];
+    filter.$and.push({
+      $or: [{ sweetness }, { type: sweetness }],
+    });
   }
 
   if (country) {

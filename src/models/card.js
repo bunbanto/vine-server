@@ -2,6 +2,8 @@ const { Schema, model } = require('mongoose');
 const {
   WINE_TYPES,
   WINE_COLORS,
+  WINE_SWEETNESS,
+  isWineSweetness,
   isWineType,
 } = require('../constants/wine');
 
@@ -26,6 +28,13 @@ const cardSchema = new Schema(
       enum: {
         values: WINE_TYPES,
         message: `Type must be one of: ${WINE_TYPES.join(', ')}`,
+      },
+    },
+    sweetness: {
+      type: String,
+      enum: {
+        values: WINE_SWEETNESS,
+        message: `Sweetness must be one of: ${WINE_SWEETNESS.join(', ')}`,
       },
     },
     alcohol: {
@@ -147,6 +156,36 @@ const cardSchema = new Schema(
   },
   { versionKey: false, timestamps: true },
 );
+
+cardSchema.pre('validate', function migrateLegacyWineType(next) {
+  if (isWineSweetness(this.type)) {
+    this.sweetness = this.sweetness || this.type;
+    this.type = 'wine';
+  }
+
+  if (!isWineType(this.type)) {
+    this.sweetness = undefined;
+    this.frizzante = false;
+  }
+
+  next();
+});
+
+function normalizeCardObject(doc, ret) {
+  if (isWineSweetness(ret.type)) {
+    ret.sweetness = ret.sweetness || ret.type;
+    ret.type = 'wine';
+  }
+
+  if (!isWineType(ret.type)) {
+    delete ret.sweetness;
+  }
+
+  return ret;
+}
+
+cardSchema.set('toObject', { transform: normalizeCardObject });
+cardSchema.set('toJSON', { transform: normalizeCardObject });
 
 // Index for faster lookup by favorites list
 cardSchema.index({ favorites: 1 });

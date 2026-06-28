@@ -2,6 +2,7 @@ const { Joi, objectId } = require('./common');
 const {
   WINE_TYPES,
   WINE_COLORS,
+  WINE_SWEETNESS,
   isWineType,
 } = require('../constants/wine');
 const sortableFields = ['price', 'rating', 'anno', 'name', 'createdAt'];
@@ -10,6 +11,7 @@ const cardBaseSchema = {
   name: Joi.string().trim().min(2).max(120),
   color: Joi.string().valid(...WINE_COLORS),
   type: Joi.string().valid(...WINE_TYPES),
+  sweetness: Joi.string().valid(...WINE_SWEETNESS),
   alcohol: Joi.number().min(0).max(100),
   volume: Joi.number().min(1).max(100000),
   winery: Joi.string().trim().min(2).max(120),
@@ -58,6 +60,7 @@ const cardsQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).default(10),
   color: Joi.string().valid(...WINE_COLORS),
   type: Joi.string().valid(...WINE_TYPES),
+  sweetness: Joi.string().valid(...WINE_SWEETNESS),
   country: Joi.string().trim().min(2).max(120),
   minPrice: Joi.number().min(0),
   maxPrice: Joi.number().min(0),
