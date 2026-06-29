@@ -157,7 +157,7 @@ const cardSchema = new Schema(
   { versionKey: false, timestamps: true },
 );
 
-cardSchema.pre('validate', function migrateLegacyWineType(next) {
+cardSchema.pre('validate', function migrateLegacyWineType() {
   if (isWineSweetness(this.type)) {
     this.sweetness = this.sweetness || this.type;
     this.type = 'wine';
@@ -167,8 +167,6 @@ cardSchema.pre('validate', function migrateLegacyWineType(next) {
     this.sweetness = undefined;
     this.frizzante = false;
   }
-
-  next();
 });
 
 function normalizeCardObject(doc, ret) {
