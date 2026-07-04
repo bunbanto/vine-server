@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "for f in $(find src -name '*.js'); do node --check \"$f\" || exit 1; done",
     "test": "node --test",
+    "check:cloudinary": "node scripts/check-cloudinary.js",
     "dev": "nodemon src/server.js",
     "start": "node ./src/server.js",
     "docs:lint": "redocly lint docs/openapi.yaml",
