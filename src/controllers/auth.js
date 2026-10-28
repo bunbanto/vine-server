@@ -14,6 +14,7 @@ const getUserStats = async (userId) => {
 
 const { JWT_SECRET, JWT_EXPIRES_IN = '24h' } = process.env;
 const ADMIN_EMAIL = 'bunbanto@gmail.com';
+const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
 const getUserRole = (user) =>
   user?.email?.trim().toLowerCase() === ADMIN_EMAIL || user?.role === 'admin'
@@ -56,7 +57,9 @@ const login = async (req, res) => {
     return res.status(401).json({ message: 'Email or password is wrong' });
   }
 
-  const passwordCompare = await bcrypt.compare(password, user.password);
+  const passwordCompare = user.password
+    ? await bcrypt.compare(password, user.password)
+    : false;
   if (!passwordCompare) {
     return res.status(401).json({ message: 'Email or password is wrong' });
   }
@@ -66,6 +69,70 @@ const login = async (req, res) => {
   });
   const stats = await getUserStats(user._id);
 
+  res.json({
+    token,
+    user: {
+      _id: user._id,
+      id: user._id.toString(),
+      name: user.name || '',
+      username: user.name || '',
+      email: user.email,
+      role: getUserRole(user),
+      createdAt: user.createdAt,
+      cardCount: stats.cardCount,
+      favoritesCount: stats.favoritesCount,
+    },
+  });
+};
+
+const googleAuth = async (req, res) => {
+  if (!FIREBASE_API_KEY) {
+    return res.status(503).json({ message: 'Google authentication is not configured' });
+  }
+
+  const lookupResponse = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: req.body.idToken }),
+    },
+  );
+  const lookup = await lookupResponse.json();
+  const firebaseUser = lookup.users?.[0];
+
+  const signedInWithGoogle = firebaseUser?.providerUserInfo?.some(
+    ({ providerId }) => providerId === 'google.com',
+  );
+  if (
+    !lookupResponse.ok ||
+    !firebaseUser ||
+    firebaseUser.emailVerified !== true ||
+    !signedInWithGoogle
+  ) {
+    return res.status(401).json({ message: 'Invalid or unverified Firebase account' });
+  }
+  const email = firebaseUser.email?.trim().toLowerCase();
+  if (!email || firebaseUser.localId == null) {
+    return res.status(401).json({ message: 'Invalid Firebase account' });
+  }
+
+  let user = await User.findOne({ $or: [{ firebaseUid: firebaseUser.localId }, { email }] });
+  if (!user) {
+    user = await User.create({
+      name: firebaseUser.displayName?.trim() || email.split('@')[0] || 'Google User',
+      email,
+      firebaseUid: firebaseUser.localId,
+    });
+  } else if (!user.firebaseUid) {
+    user.firebaseUid = firebaseUser.localId;
+    await user.save();
+  } else if (user.firebaseUid !== firebaseUser.localId) {
+    return res.status(409).json({ message: 'Email is linked to another Firebase account' });
+  }
+
+  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const stats = await getUserStats(user._id);
   res.json({
     token,
     user: {
@@ -99,4 +166,4 @@ const getProfile = async (req, res) => {
   });
 };
 
-module.exports = { register, login, getProfile };
+module.exports = { register, login, googleAuth, getProfile };

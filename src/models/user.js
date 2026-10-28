@@ -17,9 +17,9 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
     },
+    firebaseUid: { type: String, sparse: true, unique: true },
   },
   { versionKey: false, timestamps: true },
 );

@@ -2,13 +2,15 @@ openapi: 3.0.3
 info:
   title: Vine Server API
   version: 1.0.0
-  description: API documentation for authentication, wine cards, comments, ratings, and favorites.
+  description: >-
+    API for user authentication and profiles, drink cards, ratings, comments,
+    and favorites. The API is served from the same host as this documentation.
   license:
     name: ISC
     url: https://opensource.org/license/isc-license-txt
 servers:
-  - url: https://api.vine-server.local
-    description: API server
+  - url: https://wine-server-b5gr.onrender.com
+    description: Production API server
 
 tags:
   - name: Auth
@@ -142,6 +144,15 @@ components:
         - token
         - user
 
+    FirebaseGoogleAuthRequest:
+      type: object
+      required: [idToken]
+      properties:
+        idToken:
+          type: string
+          description: Firebase Authentication ID token returned after Google sign-in.
+
+
     ProfileResponse:
       type: object
       properties:
@@ -225,7 +236,7 @@ components:
           type: string
           enum:
             [wine, beer, whiskey, brandy, gin, rum, liqueur, grappa, vodka, other]
-          example: whiskey
+          example: wine
         sweetness:
           type: string
           enum: [secco, abboccato, amabile, dolce]
@@ -251,6 +262,7 @@ components:
           type: string
           minLength: 2
           maxLength: 120
+          description: Required when type is wine.
           example: Veneto
         country:
           type: string
@@ -324,6 +336,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/CardBaseFields'
         - type: object
+          description: Region is required when type is wine.
           required:
             - name
             - color
@@ -496,6 +509,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /auth/google:
+    post:
+      tags: [Auth]
+      summary: Sign in with Google through Firebase
+      operationId: googleAuth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirebaseGoogleAuthRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid or unverified Firebase account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Firebase authentication is not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /auth/profile:
     get:
       tags: [Auth]
@@ -522,7 +567,10 @@ paths:
       tags: [Cards]
       summary: Get cards list with filters and pagination
       operationId: getCards
-      security: []
+      description: Authentication is optional. When a valid bearer token is supplied, each card includes the current user's isFavorite status.
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - name: page
           in: query
@@ -675,7 +723,10 @@ paths:
       tags: [Cards]
       summary: Get card by ID
       operationId: getCardById
-      security: []
+      description: Authentication is optional. When a valid bearer token is supplied, the response includes the current user's isFavorite status.
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/CardIdParam'
       responses:
