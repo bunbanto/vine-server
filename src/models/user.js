@@ -1,29 +1,4 @@
-const { Schema, model } = require('mongoose');
+const { createModel } = require('../db/documentModel');
 
-const emailRegexp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const userSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-      minlength: [2, 'Name must be at least 2 characters'],
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required'],
-      unique: true,
-      match: [emailRegexp, 'Please enter a valid email'],
-    },
-    password: {
-      type: String,
-      minlength: [6, 'Password must be at least 6 characters'],
-    },
-    firebaseUid: { type: String, sparse: true, unique: true },
-  },
-  { versionKey: false, timestamps: true },
-);
-
-const User = model('user', userSchema);
-
-module.exports = User;
+// User records are stored in Firestore; passwords remain bcrypt hashes.
+module.exports = createModel('users');

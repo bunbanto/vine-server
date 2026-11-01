@@ -11,7 +11,8 @@
     "start": "node ./src/server.js",
     "docs:lint": "redocly lint docs/openapi.yaml",
     "docs:build": "redocly build-docs docs/openapi.yaml --output docs/index.html",
-    "docs:preview": "redocly preview-docs docs/openapi.yaml --port 8081"
+    "docs:preview": "redocly preview-docs docs/openapi.yaml --port 8081",
+    "migrate:firestore": "node scripts/migrate-mongodb-to-firestore.js"
   },
   "repository": {
     "type": "git",
@@ -33,11 +34,11 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
+    "firebase-admin": "^14.5.0",
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
-    "mongodb": "^7.0.0",
-    "mongoose": "^9.1.1",
+    "mongodb": "^7.8.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1"
   },

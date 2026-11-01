@@ -1,28 +1,41 @@
-const mongoose = require('mongoose');
+const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
+const fs = require('node:fs');
 
-const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_URL, MONGODB_DB } = process.env;
-const mongoDbUri = process.env.MONGO_DB_URI;
-
-const DB_HOST =
-  mongoDbUri ||
-  `mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_URL}/${MONGODB_DB}?retryWrites=true&w=majority`;
+let db;
 
 const connectDB = async () => {
-  try {
-    if (!DB_HOST || DB_HOST.includes('undefined')) {
-      throw new Error('MongoDB connection string is not configured');
-    }
+  if (db) return db;
 
-    await mongoose.connect(DB_HOST, {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('Database connection successful');
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
+  const credentialsPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  const credentialsJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  let credential;
+
+  if (credentialsJson) {
+    credential = admin.cert(JSON.parse(credentialsJson));
+  } else if (credentialsPath && fs.existsSync(credentialsPath)) {
+    credential = admin.cert(require(require('node:path').resolve(credentialsPath)));
+  } else {
+    throw new Error(
+      'Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON to connect to Firestore',
+    );
   }
+
+  if (!admin.getApps().length) {
+    admin.initializeApp({
+      credential,
+      projectId: process.env.FIREBASE_PROJECT_ID || credential.projectId,
+    });
+  }
+  const databaseId = process.env.FIRESTORE_DATABASE_ID || '(default)';
+  db = getFirestore(admin.getApp(), databaseId);
+  console.log(`Firestore connection configured for database: ${databaseId}`);
+  return db;
 };
 
-module.exports = connectDB;
+const getDB = () => {
+  if (!db) throw new Error('Firestore has not been initialized');
+  return db;
+};
+
+module.exports = { connectDB, getDB };
