@@ -35,7 +35,7 @@ components:
       name: id
       in: path
       required: true
-      description: Card ID (MongoDB ObjectId)
+      description: Firestore document ID (24-character hexadecimal string; legacy IDs are preserved)
       schema:
         type: string
         pattern: '^[a-fA-F0-9]{24}$'
@@ -43,7 +43,7 @@ components:
       name: commentId
       in: path
       required: true
-      description: Comment ID (MongoDB ObjectId)
+      description: Comment ID (24-character hexadecimal string)
       schema:
         type: string
         pattern: '^[a-fA-F0-9]{24}$'

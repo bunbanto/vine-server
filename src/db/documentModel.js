@@ -32,7 +32,8 @@ class Document {
   constructor(model, data, isNew = false) {
     Object.defineProperty(this, '_model', { value: model });
     this._isNew = isNew;
-    Object.assign(this, data);
+    // Keep Firestore timestamps as JavaScript Dates for consistent API responses.
+    Object.assign(this, plain(data));
     if (model.collection === 'wines') {
       this.ratings ||= [];
       this.comments ||= [];
